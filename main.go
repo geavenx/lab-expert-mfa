@@ -8,10 +8,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"runtime"
+	"time"
 )
 
 // Change host to your own lab
-var host string = "https://0aae002e04be0ff5816cb29d0002005c.web-security-academy.net"
+var host string = "https://0ac3009504eb4afb83f6abc700730060.web-security-academy.net"
 
 // Change threads to the number of threads you want to run in goroutines
 var threads int = 100
@@ -28,6 +30,14 @@ var client = &http.Client{
 }
 
 func main() {
+	startTime := time.Now()
+	defer func(start time.Time) {
+		duration := time.Since(start)
+		fmt.Printf("Took %0.0f seconds to find session", duration.Seconds())
+	}(startTime)
+
+	// Use all CPUs available on the machine (MAX. PERFORMANCE)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Creating a channel to wait for every response, basically a synchronization mechanism
 	done := make(chan bool)
@@ -42,6 +52,7 @@ func main() {
 		}
 	}
 	log.Println("Finished!")
+	
 }
 
 func formatNumber(mfa int) string {
